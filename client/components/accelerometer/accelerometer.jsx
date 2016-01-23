@@ -5,17 +5,20 @@ import {AccelerometerActions} from '../../stores/accelerometer-store';
 const Accelerometer = React.createClass({
   render() {
     return (
-      <div>
+      <div style={{textAlign: 'right'}}>
         Accelerometer Data
-        <p>{this.props.accel.x}</p>
-        <p>{this.props.accel.y}</p>
-        <p>{this.props.accel.z}</p>
-        <p>{this.props.accel.vx}</p>
-        <p>{this.props.accel.vy}</p>
-        <p>{this.props.accel.vz}</p>
-        <p>{this.props.accel.ax}</p>
-        <p>{this.props.accel.ay}</p>
-        <p>{this.props.accel.az}</p>
+        
+        <p>{Math.round(this.props.accel.x * 100)}</p>
+        <p>{Math.round(this.props.accel.y * 100)}</p>
+        <p>{Math.round(this.props.accel.z * 100)}</p>
+        <hr/>
+        <p>{Math.round(this.props.accel.vx * 100)}</p>
+        <p>{Math.round(this.props.accel.vy * 100)}</p>
+        <p>{Math.round(this.props.accel.vz * 100)}</p>
+        <hr/>
+        <p>{Math.round(this.props.accel.ax * 1000)}</p>
+        <p>{Math.round(this.props.accel.ay * 1000)}</p>
+        <p>{Math.round(this.props.accel.az * 1000)}</p>
       </div>
     );
   }

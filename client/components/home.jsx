@@ -6,7 +6,7 @@ import {BrowserInformationContainer} from '../containers/browser-information-con
 const Home = React.createClass({
   render() {
     return (
-      <div className="container">
+      <div style={{position: 'relative' }} className="container">
         <div className="row">
           <div className="col-md-6 col-md-offset-3 col-sm-12">
             <ConnectionContainer />

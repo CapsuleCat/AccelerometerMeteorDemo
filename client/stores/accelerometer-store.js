@@ -38,13 +38,13 @@ const AccelerometerStore = Reflux.createStore({
     this._oldVelocity.y = this._velocity.y;
     this._oldVelocity.z = this._velocity.z;
 
-    this._velocity.x = (this._pos.x - this._oldPos.x) / 2.0;
-    this._velocity.y = (this._pos.y - this._oldPos.y) / 2.0;
-    this._velocity.z = (this._pos.z - this._oldPos.z) / 2.0;
+    this._velocity.x = (this._pos.x - this._oldPos.x) / 100;
+    this._velocity.y = (this._pos.y - this._oldPos.y) / 100;
+    this._velocity.z = (this._pos.z - this._oldPos.z) / 100;
 
-    this._accel.x = (this._velocity.x - this._oldVelocity.x) / 2.0;
-    this._accel.y = (this._velocity.y - this._oldVelocity.y) / 2.0;
-    this._accel.z = (this._velocity.z - this._oldVelocity.z) / 2.0;
+    this._accel.x = (this._velocity.x - this._oldVelocity.x) / 100;
+    this._accel.y = (this._velocity.y - this._oldVelocity.y) / 100;
+    this._accel.z = (this._velocity.z - this._oldVelocity.z) / 100;
 
    
     this.trigger(this.getInitialState());
