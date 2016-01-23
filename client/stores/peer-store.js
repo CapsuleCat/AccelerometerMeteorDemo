@@ -19,13 +19,15 @@ const PeerStore = Reflux.createStore({
     this._connections = [];
   },
 
-  _data: function(data) {
-    console.log(data);
-    AccelerometerActions.update(
-        data.x,
-        data.y,
-        data.z
-    );
+  _data: function(id) {
+    return (data) => {
+      AccelerometerActions.update(
+          data.x,
+          data.y,
+          data.z,
+          id
+      );
+    }
   },
 
   _closed: function(connectionId) {
@@ -59,7 +61,7 @@ const PeerStore = Reflux.createStore({
     this._peer.on('connection', function (connection) {
       const connectionId = connection.peer;
 
-      connection.on('data', this._data.bind(this));
+      connection.on('data', this._data(connectionId).bind(this));
       connection.on('close', this._closed(connectionId));
       
       this._connections.push(connection);
@@ -75,7 +77,7 @@ const PeerStore = Reflux.createStore({
   onConnect: function (otherKey) {
     let connection = this._peer.connect(otherKey);
 
-    connection.on('data', this._data.bind(this));
+    connection.on('data', this._data(otherKey).bind(this));
 
     connection.on('open', function () {
       connection.send(this._key + ' has connected');

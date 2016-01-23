@@ -3,51 +3,53 @@ import {jQuery as $} from 'meteor/jquery';
 
 import {Blob} from '../components/blob/blob.jsx';
 
+const velocity = 1;
+
 const BlobContainer = React.createClass({
   getInitialState() {
     return {
-      velocity: 1,
-      rotation: 90,
-      x: 0,
-      y: 0
+      blobData: [
+        /*
+        id,
+        rotation,
+        x,
+        y,
+        color
+        */
+      ]
     }
   },
 
   _step() {
-    // apply the velocity on the current rotation
-    // set x and y
-    let x = this.state.x + this.state.velocity * Math.cos(this.state.rotation * Math.PI / 180);
-    let y = this.state.y + this.state.velocity * Math.sin(this.state.rotation * Math.PI / 180);
+    this.state.blobData.forEach((blob, index, arr) => {
+      let x = blob.x + velocity * Math.cos(blob.rotation * Math.PI / 180);
+      let y = blob.y + velocity * Math.sin(blob.rotation * Math.PI / 180);
 
-    // Clamp to the window
-    if (x > $('body').width() - 50) {
-      x = $('body').width() - 50;
-    }
-    if (x < 0) {
-      x = 0;
-    }
-    if (y > $('body').height() - 50) {
-      y = $('body').height() - 50;
-    }
-    if (y < 0) {
-      y = 0;
-    }
+      // Clamp to the window
+      if (x > $('body').width() - 50) {
+        x = $('body').width() - 50;
+      }
+      if (x < 0) {
+        x = 0;
+      }
+      if (y > $('body').height() - 50) {
+        y = $('body').height() - 50;
+      }
+      if (y < 0) {
+        y = 0;
+      }
 
-    this.setState({
-      x, y
-    });
-  },
+      arr[index] = {
+        id: blob.id,
+        rotation: blob.rotation,
+        x,
+        y,
+        color: blob.color
+      }
 
-  _rotate(rotation) {
-    if (this._rotateAnimation) {
-      // TODO clear animation
-    }
-
-    // TODO apply "animation"
-    this._rotateAnimation = null;
-
-    this.setState({
-      rotation
+      this.setState({
+        blobData: arr
+      });
     });
   },
 
@@ -67,27 +69,67 @@ const BlobContainer = React.createClass({
   },
 
   componentWillReceiveProps(newProps) {
-    if (this._initialY == null) {
-      this._initialY = newProps.accel.y;
-    }
+    /*
+      props: {
+        x, y, z,
+        id, color
+      }
+    */
+    let nextState = this.state.blobData.slice(0, this.state.blobData.length);
 
-    let aY = 0;
+    newProps.playerData.players.forEach((data, _, arr) => {
+      let aY = 0;
+      if (data.y > 30 || data.y < -30) {
+        aY = data.y / 2;
+      }
 
-    if (newProps.accel.y > this._initialY + 4 * this._initialY || 
-        newProps.accel.y < this._initialY - 4 * this._initialY ) {
-      aY = (-newProps.accel.y - this._initialY ) / ( 8 * this._initialY );
-    }
+      // Alright... now...
+      // Find the current id in the nextState array
+      // Mark the nextState blob as visited
+      let index = nextState.findIndex((blob) => { return blob.id === data.id });
+      // if exists, update
+      if (index !== -1) {
+        let rotation = this._mod(this.state.blobData[index].rotation + aY, 360);
+        nextState[index].rotation = rotation;
+        nextState[index].visited = true;
+      }
+      // else, make new
+      else {
+        nextState.push({
+          id: data.id,
+          x: 0,
+          y: 0,
+          rotation: 0,
+          color: data.color,
+          visited: true
+        });
+      }
+    });
 
-    let rotation = this._mod(this.state.rotation + aY, 360);
-    console.log(rotation);
-    this._rotate(rotation);
+    // clean all unvisited blobs
+    nextState = nextState.filter((blob) => {
+      let wasVisited = blob.visited === true;
+      delete blob.visited
+      return wasVisited;
+    });
+
+
+    this.setState({
+      blobData: nextState
+    });
   },
 
   render() {
     return (
-      <Blob
-          x={this.state.x}
-          y={this.state.y} />
+      <div>
+        {this.state.blobData.map((blob) => {
+          return <Blob
+              key={blob.id}
+              x={blob.x}
+              y={blob.y}
+              color={blob.color} />
+        })}
+      </div>
     );
   }
 });
