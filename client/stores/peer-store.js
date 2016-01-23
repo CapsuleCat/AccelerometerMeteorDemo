@@ -14,14 +14,37 @@ const PeerStore = Reflux.createStore({
 
   init: function () {
     this._key = null;
-    this._connectedToKey = null;
-    this._otherKey = null;
+    this._connectedKeys = [];
     this._peer = null;
-    this._connection = null;
+    this._connections = [];
   },
 
   _data: function(data) {
-    AccelerometerActions.update(data.x, data.y, data.z);
+    console.log(data);
+    AccelerometerActions.update(
+        data.x,
+        data.y,
+        data.z
+    );
+  },
+
+  _closed: function(connectionId) {
+    return () => {
+      // remove the connection from the list of connectedKeys
+      let index = this._connectedKeys.indexOf(connectionId);
+      this._connectedKeys.splice(index, 1);
+
+      // remove the connection from the list of connections
+      let connections = this._connections.filter((connection) => {
+        return (connection.peer === connectionId);
+      });
+
+      if (connections && connections.length > 0) {
+        this._connections.splice(connections[0], 1);
+      }
+
+      this.trigger(this.getInitialState()); 
+    }
   },
 
   onOpen: function(key) {
@@ -34,17 +57,13 @@ const PeerStore = Reflux.createStore({
     // });
 
     this._peer.on('connection', function (connection) {
-      this._connection = connection;
-      this._connectedToKey = connection.peer;
+      const connectionId = connection.peer;
 
-      this._connection.on('data', this._data.bind(this));
-      this._connection.on('close', function() {
-        this._connectedToKey = null;
-        this._connection = null;
-
-        this.trigger(this.getInitialState()); 
-      }.bind(this));
+      connection.on('data', this._data.bind(this));
+      connection.on('close', this._closed(connectionId));
       
+      this._connections.push(connection);
+      this._connectedKeys.push(connection.peer);
 
       this.trigger(this.getInitialState());
     }.bind(this));
@@ -54,44 +73,64 @@ const PeerStore = Reflux.createStore({
   },
 
   onConnect: function (otherKey) {
-    this._connection = this._peer.connect(otherKey);
-    this._connectedToKey = otherKey;
+    let connection = this._peer.connect(otherKey);
 
-    this._connection.on('data', this._data.bind(this));
+    connection.on('data', this._data.bind(this));
 
-    this._connection.on('open', function () {
-      this._connection.send(this._key + ' has connected');
+    connection.on('open', function () {
+      connection.send(this._key + ' has connected');
     }.bind(this));
 
-    this._connection.on('close', function() {
-      this._connectedToKey = null;
-      this._connection = null;
+    connection.on('close', this._closed(otherKey));
 
-      this.trigger(this.getInitialState()); 
-    }.bind(this));
+    this._connections.push(connection);
+    this._connectedKeys.push(otherKey);
 
     this.trigger(this.getInitialState());
   },
 
-  onDisconnect: function () {
-    this._connection.close();
+  onDisconnect: function (connectionId) {
+    let connections = this._connections.filter((connection) => {
+      return (connection.peer === connectionId);
+    });
 
-    this._connectedToKey = null;
-    this._connection = null; 
+    let connection = null;
+
+    if (connections && connections.length > 0) {
+      connection = connections[0];
+    }
+
+    connection.close();
+
+    this._closed(connectionId)();
 
     this.trigger(this.getInitialState());
   },
 
-  onSend: function (data) {
-    this._connection.send(data);
+  onSend: function (data, connectionId) {
+    let connection = null;
+
+    if (connectionId == null) {
+      connection = this._connections[0];
+    } else {
+      let connections = this._connections.filter((connection) => {
+        return (connection.peer === connectionId);
+      });
+
+      if (connections && connections.length > 0) {
+        connection = connections[0];
+      }
+    }
+
+    connection.send(data);
   },
 
   getInitialState: function() {
     return {
       hasOpenPeer: ( this._peer != null ),
-      hasOpenConnection: ( this._connection != null ),
+      hasOpenConnection: ( this._connections.length > 0 ),
       key: this._key,
-      connectedToKey: this._connectedToKey
+      connectedKeys: this._connectedKeys
     }
   }
 });

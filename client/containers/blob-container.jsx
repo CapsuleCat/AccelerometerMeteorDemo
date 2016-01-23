@@ -79,7 +79,7 @@ const BlobContainer = React.createClass({
     }
 
     let rotation = this._mod(this.state.rotation + aY, 360);
-
+    console.log(rotation);
     this._rotate(rotation);
   },
 

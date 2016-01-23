@@ -6,14 +6,16 @@ const ConnectedTo = React.createClass({
   getDefaultProps() {
     return {
       hasOpenConnection: false,
-      connectedToKey: 'None'
+      connectedKeys: []
     };
   },
 
-  handleDisconnect(e) {
-    e.preventDefault();
+  handleDisconnect(key) {
+    return (e) => {
+      e.preventDefault();
 
-    PeerActions.disconnect();
+      PeerActions.disconnect(key);
+    }
   },
 
   render() {
@@ -24,12 +26,22 @@ const ConnectedTo = React.createClass({
     return (
       <div className="panel panel-default">
         <div className="panel-body">
-          <p>Connected to: {this.props.connectedToKey}</p>
-          <button
-              onClick={this.handleDisconnect}
-              className="btn btn-danger">
-            Disconnect
-          </button>
+          <h3>Connections</h3>
+
+          <ul>
+            {this.props.connectedKeys.map((key) => {
+              return (
+                <li key={key}>
+                  {key}
+                  <button
+                      onClick={this.handleDisconnect(key)}
+                      className="btn btn-danger">
+                    Disconnect
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
     );

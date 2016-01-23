@@ -19,7 +19,7 @@ const ConnectionContainer = React.createClass({
             hasOpenPeer={this.state.peer.hasOpenPeer}
             hasOpenConnection={this.state.peer.hasOpenConnection} />
         <ConnectedTo
-            connectedToKey={this.state.peer.connectedToKey}
+            connectedKeys={this.state.peer.connectedKeys}
             hasOpenConnection={this.state.peer.hasOpenConnection} />
       </div>
     );
